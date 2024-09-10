@@ -65,6 +65,7 @@
     TestFailing         := IniRead(IniFile, Section, "TestFailing", 0)
     TreeViewWidth       := IniRead(IniFile, Section, "TreeViewWidth", 280)
     ViewExpectedCode    := IniRead(IniFile, Section, "ViewExpectedCode", 0)
+    ViewSymbolsChecked  := IniRead(IniFile, Section, "ViewSymbolsChecked", 0)
     OnExit(ExitFunc)
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI (Seems like this should be moved to exit routine SEE Esc::)
 
@@ -166,9 +167,6 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
 }
 ButtonConvert(*)
 {
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
-    }
     DllCall("QueryPerformanceFrequency", "Int64*", &freq := 0)
     DllCall("QueryPerformanceCounter", "Int64*", &CounterBefore := 0)
     V2Edit.Text := Convert(V1Edit.Text)
@@ -179,7 +177,7 @@ ButtonGenerateTest(*)
 {
 
     if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+        MenuShowSymbols()
     }
     input_script := V1Edit.Text
     expected_script := V2Edit.Text
@@ -291,7 +289,7 @@ CompDiffV2(*)
         Return
     }
     if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+        MenuShowSymbols()
     }
     TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
@@ -314,7 +312,7 @@ CompDiffV2(*)
 CompDiffV2E(*)
 {
     if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+        MenuShowSymbols()
     }
     TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
@@ -337,7 +335,7 @@ CompDiffV2E(*)
 CompVscV2(*)
 {
     if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+        MenuShowSymbols()
     }
     TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
     AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
@@ -360,7 +358,7 @@ CompVscV2(*)
 CompVscV2E(*)
 {
     if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+        MenuShowSymbols()
     }
     TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
@@ -582,6 +580,9 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
 }
 
 Gui_Close(thisGui){
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymbols()
+    }
     FileTempScript := A_IsCompiled ? A_ScriptDir "\TempScript.ah1" : A_ScriptDir "\Tests\TempScript.ah1"
     if (FileExist(FileTempScript)){
         FileDelete(FileTempScript)
@@ -743,7 +744,7 @@ GuiTest(strV1Script:="")
     ViewMenu := Menu()
     ViewMenu.Add("Zoom In`tCtrl+NumpadAdd", MenuZoomIn)
     ViewMenu.Add("Zoom Out`tCtrl+NumpadSub", MenuZoomOut)
-    ViewMenu.Add("Show Symols", MenuShowSymols)
+    ViewMenu.Add("Show Symbols", MenuShowSymbols)
     ViewMenu.Add()
     ViewMenu.Add("View Tree",MenuViewtree)
     ViewMenu.Add("View Expected Code",MenuViewExpected)
@@ -851,9 +852,9 @@ MenuCommandHelp(*)
         }
     }
 }
-MenuShowSymols(*)
+MenuShowSymbols(*)
 {
-    ViewMenu.ToggleCheck("Show Symols")
+    ViewMenu.ToggleCheck("Show Symbols")
     CheckBoxViewSymbols.Value := !CheckBoxViewSymbols.Value
     ViewSymbols()
 }
@@ -971,7 +972,7 @@ RunV1(*)
 {
     CloseV1(myGui)
     if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+        MenuShowSymbols()
     }
     TempAhkFile := A_MyDocuments "\testV1.ahk"
     AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
@@ -987,7 +988,7 @@ RunV2(*)
 {
     CloseV2(myGui)
     if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+        MenuShowSymbols()
     }
     TempAhkFile := A_MyDocuments "\testV2.ahk"
     AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
@@ -1003,7 +1004,7 @@ RunV2E(*)
 {
     CloseV2E(myGui)
     if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+        MenuShowSymbols()
     }
     TempAhkFile := A_MyDocuments "\testV2E.ahk"
     AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
@@ -1050,16 +1051,18 @@ TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is sele
 }
 ViewSymbols(*)
 {
-    ViewMenu.ToggleCheck("Show Symols")
+    ViewMenu.ToggleCheck("Show Symbols")
     if (CheckBoxViewSymbols.Value){
-        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
-        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
-        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
+        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"(<!`r)`n","↓`n"),"`r`n","↲`r`n")," ","·"),"`t","→")
+        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"(<!`r)`n","↓`n"),"`r`n","↲`r`n")," ","·"),"`t","→")
+        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"(<!`r)`n","↓`n"),"`r`n","↲`r`n")," ","·"),"`t","→")
+        IniWrite("1", IniFile, Section, "ViewSymbolsChecked")
     }
     else{
-        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
-        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
-        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
+        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"↓`n","`n"),"↲`r`n","`r`n"),"·"," "),"→","`t")
+        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"↓`n","`n"),"↲`r`n","`r`n"),"·"," "),"→","`t")
+        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"↓`n","`n"),"↲`r`n","`r`n"),"·"," "),"→","`t")
+        IniWrite("0", IniFile, Section, "ViewSymbolsChecked")
     }
 }
 ViewV2E(*)
